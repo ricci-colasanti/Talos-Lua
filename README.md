@@ -1,3 +1,4 @@
+
 <div align="left">
   <img src="img/Talos.png" alt="Talos Logo" width="300" height="300">
   <p><em>Talos — Migration Microsimulation Engine</em></p>
@@ -24,23 +25,16 @@ Traditional microsimulation systems have a fundamental problem: **to change how 
 
 Talos takes a different approach. **Models are defined as data, not code.** Here's how:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   1. Your Population (CSV)                                 │
-│      └── people with their characteristics                 │
-│                                                             │
-│   2. Your Model (YAML + Lua)                               │
-│      └── instructions that define how people change        │
-│                                                             │
-│   3. Talos Engine (Single Binary)                          │
-│      └── reads your data + your instructions              │
-│      └── executes the simulation                           │
-│                                                             │
-│   4. Results (CSV)                                         │
-│      └── population after simulation                       │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    CSV["📄 CSV<br/>Population Data"] --> TALOS["🤖 Talos<br/>Engine"]
+    YAML["⚙️ YAML+Lua<br/>Model Logic"] --> TALOS
+    TALOS --> RESULTS["📊 CSV<br/>Results"]
+    
+    style CSV fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style YAML fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    style TALOS fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    style RESULTS fill:#fff3e0,stroke:#e65100,stroke-width:2px
 ```
 
 ### What This Means for You

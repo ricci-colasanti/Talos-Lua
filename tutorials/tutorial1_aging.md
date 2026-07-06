@@ -25,6 +25,106 @@ By the end of this tutorial, you'll be able to:
 
 No complex programming, no compilation - just simple instructions that read like plain English!
 
+---
+
+## Why Lua Code Inside YAML?
+
+You might wonder: **"Why do I need to write Lua code inside a YAML configuration file?"**
+
+### The Role of the Code
+
+The Lua script is the **brain** of your model. It tells Talos **what** to do with your population data. Think of it this way:
+
+| Component | What it does | Analogy |
+|-----------|--------------|---------|
+| **CSV** | Stores your data | The raw ingredients |
+| **YAML** | Configures the simulation | The recipe book |
+| **Lua** | Defines the logic | The cooking instructions |
+
+Without the Lua script, Talos wouldn't know:
+- How people should age
+- Who should die and when
+- Who should have children
+- How people should move between areas
+
+### The Advantages
+
+**1. You Can Change Behavior Without Changing Code**
+
+Traditional microsimulation systems require you to edit and recompile the source code to change model behavior. With Talos, you just edit the Lua script in the YAML file:
+
+```yaml
+# Change this:
+person.age = person.age + 1
+
+# To this:
+person.age = person.age + 2
+```
+
+No recompilation needed! Just edit, save, and rerun.
+
+**2. Models Are Self-Documenting**
+
+The Lua script is right there in the configuration file. You can read exactly what the model does:
+
+```lua
+-- This is easy to understand!
+if person.alive == true then
+  person.age = person.age + 1  -- Everyone alive gets older
+end
+```
+
+**3. Models Are Portable**
+
+Because the model logic is in the YAML file, you can share it with colleagues. They can run your exact model without needing to install or compile anything.
+
+**4. Models Are Auditable**
+
+You can version control your models (using Git, for example). Every change to the model is tracked and visible.
+
+**5. You Can Experiment Freely**
+
+Want to try a different aging rule? Edit the script and rerun. Want to test a new fertility model? Edit the script. No waiting for compilation, no complex development environment.
+
+### Why Lua?
+
+**Lua is a scripting language designed to be embedded in other applications.** It's:
+
+| Feature | Why It Matters |
+|---------|----------------|
+| **Simple** | Lua has a very small set of concepts to learn. You can learn the basics in minutes. |
+| **Readable** | Lua reads like plain English. `if person.alive == true then` makes immediate sense. |
+| **Fast** | Lua is one of the fastest scripting languages. It can handle populations of millions. |
+| **Small** | The entire Lua interpreter fits in a tiny binary. No bloat. |
+| **Embedded** | Lua is designed to be embedded in applications like Talos. It just works. |
+| **Proven** | Lua is used in games, embedded systems, and scientific applications worldwide. |
+
+**What Lua Is NOT:**
+
+- ❌ It's not complex like Python or Java
+- ❌ It's not difficult to learn
+- ❌ It's not a general-purpose programming language for building applications
+- ❌ You don't need to be a programmer to use it
+
+### What You Actually Need to Know
+
+For Talos, you only need to know a handful of Lua concepts:
+
+| Concept | What it does | Example |
+|---------|--------------|---------|
+| `function` | Defines a model or statistic | `function transition(population, params)` |
+| `for` | Loops through people | `for _, person in ipairs(population) do` |
+| `if` | Checks a condition | `if person.alive == true then` |
+| `==` | Compares values | `person.alive == true` |
+| `=` | Assigns a value | `person.age = person.age + 1` |
+| `return` | Returns a result | `return population` |
+| `#` | Counts items | `#population` |
+| `{}` | Creates a result table | `{ total = #population }` |
+
+**That's it!** These 8 concepts are all you need for most demographic models.
+
+---
+
 ## Step 1: Create a Population CSV
 
 First, let's create a small population to work with. Create a file called `population.csv`:

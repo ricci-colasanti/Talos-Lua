@@ -8,6 +8,93 @@
 
 A fully self-contained, dynamically configurable demographic microsimulation system written in Go. **Talos is specifically designed as a migration microsimulation model** that simulates population movement between geographic areas while also handling other demographic processes like aging and mortality.
 
+---
+
+## How Talos Works: Our Approach
+
+### The Problem We're Solving
+
+Traditional microsimulation systems have a fundamental problem: **to change how the model behaves, you need to change the source code and recompile.** This means:
+- Only programmers can modify models
+- Each change requires a new software release
+- Models are locked inside compiled binaries
+- Collaboration is difficult
+
+### Our Solution: Models as Data
+
+Talos takes a different approach. **Models are defined as data, not code.** Here's how:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   1. Your Population (CSV)                                 │
+│      └── people with their characteristics                 │
+│                                                             │
+│   2. Your Model (YAML + Lua)                               │
+│      └── instructions that define how people change        │
+│                                                             │
+│   3. Talos Engine (Single Binary)                          │
+│      └── reads your data + your instructions              │
+│      └── executes the simulation                           │
+│                                                             │
+│   4. Results (CSV)                                         │
+│      └── population after simulation                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### What This Means for You
+
+| Traditional Approach | Talos Approach |
+|----------------------|----------------|
+| Model is code | Model is data (YAML + Lua) |
+| Change = recompile | Change = edit text file |
+| Programmers only | Anyone can modify |
+| One model per release | Many models in one binary |
+| Models are hidden | Models are transparent |
+| Hard to share | Easy to share |
+
+### The Three Components
+
+**1. CSV Files: Your Population Data**
+
+Your population is stored as a simple CSV file. Each row is one person, each column is a characteristic (age, sex, area, etc.). Talos automatically detects your columns - no configuration needed!
+
+**2. YAML + Lua: Your Model Instructions**
+
+Your model is defined in a YAML file with embedded Lua scripts:
+- **YAML** configures the simulation (iterations, file paths, etc.)
+- **Lua** defines the logic (how people age, die, move, etc.)
+
+The Lua scripts are the "brain" of your model. They tell Talos what to do with your population.
+
+**3. Talos Engine: The Interpreter**
+
+Talos is a single, self-contained executable that:
+- Reads your CSV population
+- Reads your YAML model instructions
+- Executes the Lua scripts on your population
+- Produces CSV results
+
+### Why This Works
+
+**For Non-Programmers:**
+- You only need to learn a few simple Lua concepts
+- Models read like plain English
+- No compilation, no complex setup
+
+**For Researchers:**
+- Rapid iteration: edit and rerun in seconds
+- Full transparency: the model is visible in the config
+- Easy collaboration: share config files, not code
+
+**For Developers:**
+- One binary for all models
+- No dependency management
+- Easy distribution
+
+---
+
 ## Overview
 
 Talos is a **migration-focused microsimulation engine** that models population dynamics through individual-level simulation. Unlike traditional microsimulation systems that require code changes for each new model, Talos uses:

@@ -374,11 +374,20 @@ end
 
 > "Go through everyone in the population. For each person who is alive, take their current age, add 1 to it, and save that new age back to the population."
 
-### Why Must the Function Be Called `transition`?
+### Model Functions
 
-**All model functions must be called `transition`.** This is a requirement of Talos.
+Each individual model is described as a Lua function. All model functions are called **`transition`** functions. This is a requirement of Talos.
 
-**Why?**
+### Why Are They Called `transition` Functions?
+
+In demographic modeling, a **transition** is a change from one state to another. For example:
+- **Age transition**: Moving from age 25 to age 26
+- **Mortality transition**: Moving from "alive" to "dead"
+- **Migration transition**: Moving from "area 1" to "area 2"
+
+Each year, Talos runs your `transition` functions to apply these changes to your population. That's why they're called transition functions - they describe how people **transition** from one state to another.
+
+### How Talos Finds Your Transition Function
 
 When Talos runs your model, it needs to know which function to execute. Rather than guessing, Talos looks for a function with the exact name `transition`. This is similar to how:
 
@@ -388,9 +397,11 @@ When Talos runs your model, it needs to know which function to execute. Rather t
 
 By requiring a specific function name, Talos can reliably find and run your model every year.
 
-**The same applies to statistics:** All statistic functions must be called `statistic`.
+### The Same Applies to Statistics
 
-**What happens if you use a different name?**
+Statistics are also described as Lua functions. All statistic functions are called **`statistic`** functions. They calculate and return metrics about your population each year.
+
+### What Happens If You Use a Different Name?
 
 If you call your model function something else, Talos won't find it and will throw an error:
 
@@ -418,7 +429,7 @@ function transition(population, params)
 end
 ```
 
-**Summary:**
+### Summary
 
 | Script Type | Required Function Name | What It Does |
 |-------------|------------------------|--------------|
@@ -692,7 +703,7 @@ Congratulations! You've successfully:
 4. ✅ Aged an entire population by 5 years
 5. ✅ Tracked population totals
 6. ✅ Understood how Lua connects to your CSV data
-7. ✅ Learned why function names must be `transition` and `statistic`
+7. ✅ Learned that model functions must be called `transition` and statistic functions must be called `statistic`
 
 You now know the basic workflow for using Talos.
 

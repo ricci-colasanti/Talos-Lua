@@ -150,6 +150,8 @@ This gives us 10 individuals with various ages. The columns are:
 - `area`: Geographic area (we'll use just one area for now)
 - `alive`: Whether the person is alive (true/false)
 
+---
+
 ## Step 2: Understanding YAML
 
 YAML (YAML Ain't Markup Language) is a human-readable data format that Talos uses for configuration.
@@ -157,6 +159,8 @@ YAML (YAML Ain't Markup Language) is a human-readable data format that Talos use
 **Important Rule:** YAML uses **spaces** for indentation, **never tabs**. The number of spaces doesn't matter as long as it's consistent (2 spaces is standard). 
 
 That's it for now! We'll cover more YAML rules in the next tutorial. For now, just copy the configuration below exactly as shown.
+
+---
 
 ## Step 3: Create the Configuration File
 
@@ -200,6 +204,8 @@ statistics:
       end
 ```
 
+---
+
 ## Step 4: Run the Simulation
 
 Now run Talos with your configuration:
@@ -212,7 +218,7 @@ talos config_aging.yaml
 ./talos config_aging.yaml
 ```
 
-## Expected Output
+### Expected Output
 
 You should see output similar to this:
 
@@ -257,6 +263,8 @@ You should see output similar to this:
 2024/01/15 10:00:00 Results saved to population_aged.csv
 ```
 
+---
+
 ## Step 5: Examine the Output
 
 Open `population_aged.csv`:
@@ -286,6 +294,8 @@ Notice that everyone has aged exactly 5 years:
 - Person 8: 35 → 40
 - Person 9: 55 → 60
 - Person 10: 70 → 75
+
+---
 
 ## Understanding Your Configuration
 
@@ -343,7 +353,9 @@ This defines our aging model:
 - **`description`**: Human-readable description
 - **`parameters.script`**: The Lua code that does the work
 
-### Understanding the Lua Script
+---
+
+## Understanding the Lua Script (In Detail)
 
 Let's look at our model's Lua script:
 
@@ -362,45 +374,200 @@ end
 
 > "Go through everyone in the population. For each person who is alive, take their current age, add 1 to it, and save that new age back to the population."
 
-**Now let's break it down piece by piece:**
+### Understanding `ipairs`
 
-| Part | What it does | In plain English |
-|------|--------------|------------------|
-| `function transition(population, params)` | Defines the model function | "This is the model that will run each year" |
-| `for _, person in ipairs(population) do` | Loop through each person | "For each person in the population..." |
-| `if person.alive == true then` | Check if alive | "...if they are alive..." |
-| `person.age = person.age + 1` | Add 1 to age | "...add 1 to their age" |
-| `return population` | Return updated population | "Send back the updated population" |
+You might wonder: **"What is `ipairs` and why do we use it?"**
 
-**Why does this work?** When Talos runs this script, it goes through each person one at a time:
-1. Checks if they are alive (`person.alive == true`)
-2. If they are, it reads their current age
-3. Adds 1 to it
-4. Saves the new age back
+`ipairs` is a Lua function that helps us **loop through a list in order**. Think of it like this:
 
-So someone who is 25 becomes 26. Someone who is 68 becomes 69. Someone who is 2 becomes 3. Everyone gets one year older!
-
-### 3. The Statistics Section
-
-```yaml
-statistics:
-  - name: "population_total"
-    description: "Total population"
-    script: |
-      function statistic(population)
-        return { total = #population }
-      end
+```lua
+for _, person in ipairs(population) do
+  -- Do something with each person
+end
 ```
 
-This defines a statistic:
+**In plain English:** "For each person in the population list, one at a time, do the following..."
 
-- **`name`**: A descriptive name for the statistic
-- **`description`**: Human-readable description
-- **`script`**: Lua code that calculates the statistic
+**Breaking down the parts:**
 
-### Understanding the Statistics Script
+| Part | What it means | In plain English |
+|------|---------------|------------------|
+| `for` | Start a loop | "For each..." |
+| `_` | The position/index (we don't need it) | "Ignore the position number" |
+| `person` | The current item | "...this person..." |
+| `in` | From the list | "...from the list..." |
+| `ipairs(population)` | The list to loop through | "...the population list, in order" |
+| `do` | Start the instructions | "...do this:" |
 
-Let's look at our statistics script:
+**Why do we use `ipairs` and not just `for`?**
+
+Lua has two ways to loop through lists:
+
+| Method | What it does | When to use |
+|--------|--------------|-------------|
+| `ipairs(list)` | Loops in order, stops at first nil | For lists like our population |
+| `pairs(list)` | Loops in any order, includes all items | For dictionaries/maps |
+
+Since our population is a simple list of people in order, we use `ipairs`.
+
+**What about the underscore (`_`)?**
+
+In Lua, `_` is a convention meaning "I don't need this value." When we loop with `ipairs`, we get both the position number and the person:
+
+```lua
+for index, person in ipairs(population) do
+  -- index = 1, 2, 3, ...
+  -- person = the person at that position
+end
+```
+
+Since we only care about the person, not their position, we use `_` instead of `index`:
+
+```lua
+for _, person in ipairs(population) do
+  -- We ignore the position and just work with each person
+end
+```
+
+### How CSV Headers Link to `person.age`
+
+This is a crucial question: **"How does `person.age` connect to my CSV column called `age`?"**
+
+**The short answer:** When Talos loads your CSV, it creates a table (Lua's version of a dictionary/object) for each person. The column names become the **keys**, and the values become the **values**.
+
+**Here's how it works:**
+
+**1. Your CSV file:**
+```csv
+person_id,age,sex,area,alive
+1,25,F,1,true
+2,30,M,1,true
+```
+
+**2. Talos loads each row as a Lua table:**
+
+When Talos reads row 1, it creates a table like this:
+
+```lua
+{
+  person_id = 1,
+  age = 25,
+  sex = "F",
+  area = 1,
+  alive = true
+}
+```
+
+**3. You access these values using the column names:**
+
+```lua
+-- Access the age column
+person.age        -- Returns 25
+
+-- Access the sex column
+person.sex        -- Returns "F"
+
+-- Access the alive column
+person.alive      -- Returns true
+```
+
+**The key point:** **The column names in your CSV become the property names in Lua.**
+
+**Examples:**
+
+| CSV Column Name | Lua Access | Value for Row 1 |
+|-----------------|------------|-----------------|
+| `person_id` | `person.person_id` | 1 |
+| `age` | `person.age` | 25 |
+| `sex` | `person.sex` | "F" |
+| `area` | `person.area` | 1 |
+| `alive` | `person.alive` | true |
+
+**Important:** The column names are **case-sensitive**!
+
+| CSV Header | Lua Access | Works? |
+|------------|------------|--------|
+| `age` | `person.age` | ✅ Yes |
+| `age` | `person.Age` | ❌ No |
+| `alive` | `person.alive` | ✅ Yes |
+| `alive` | `person.Alive` | ❌ No |
+| `person_id` | `person.person_id` | ✅ Yes |
+| `person_id` | `person.personId` | ❌ No |
+
+**Why does this matter?** If you mistype a column name, your script will fail. For example:
+
+```lua
+-- ❌ WRONG - CSV has 'alive' but we wrote 'Alive'
+if person.Alive == true then
+  person.age = person.age + 1
+end
+
+-- ✅ CORRECT - matches CSV header exactly
+if person.alive == true then
+  person.age = person.age + 1
+end
+```
+
+### The Complete Picture
+
+**When you write:**
+```lua
+person.age = person.age + 1
+```
+
+**Here's what happens step-by-step:**
+
+1. Talos loads the CSV and creates a `person` table
+2. `person.age` accesses the value from the `age` column
+3. `person.age + 1` calculates the new age
+4. `person.age = ...` stores the new value back
+
+**Example with person 1 (age 25):**
+
+| Step | Code | What happens |
+|------|------|--------------|
+| 1 | `person.age` | Gets 25 from the table |
+| 2 | `person.age + 1` | Calculates 26 |
+| 3 | `person.age = 26` | Stores 26 back in the table |
+
+**After the script runs:** Person 1's age is now 26!
+
+### Visualizing the Data
+
+**Before the model runs:**
+```
+Population = {
+  { person_id = 1, age = 25, sex = "F", area = 1, alive = true },
+  { person_id = 2, age = 30, sex = "M", area = 1, alive = true },
+  ...
+}
+```
+
+**After the model runs:**
+```
+Population = {
+  { person_id = 1, age = 26, sex = "F", area = 1, alive = true },
+  { person_id = 2, age = 31, sex = "M", area = 1, alive = true },
+  ...
+}
+```
+
+### Summary of Lua Concepts
+
+| Concept | Explanation |
+|---------|-------------|
+| `ipairs` | Loops through a list in order |
+| `_` | Means "I don't need this value" |
+| `person` | The current person being processed |
+| `person.age` | Accesses the `age` column from the CSV |
+| `person.alive` | Accesses the `alive` column from the CSV |
+| Column names | Must match your CSV header exactly (case-sensitive!) |
+
+---
+
+## Understanding the Statistics Script (In Detail)
+
+Now let's look at our statistics script with this new understanding:
 
 ```lua
 function statistic(population)
@@ -408,21 +575,52 @@ function statistic(population)
 end
 ```
 
-**First, what does this Lua do in plain English?**
+**Line by line, with full explanation:**
 
-> "Count up every single person in the population and tell me how many there are. Call this number 'total' so I know what it means."
+| Line | Code | What it does |
+|------|------|--------------|
+| 1 | `function statistic(population)` | Defines the statistic function |
+| 2 | `  return { total = #population }` | Returns a result table with `total` = number of people |
 
-**Now let's break it down piece by piece:**
+**What is `#population`?**
 
-| Part | What it does | In plain English |
-|------|--------------|------------------|
-| `function statistic(population)` | Defines the statistic function | "This is the statistic that will run each year" |
-| `return` | Send back the result | "Tell me the answer" |
-| `{ total = #population }` | Create a table with count | "The answer is the number of people in the population" |
+`#` is Lua's **length operator**. It counts the number of items in a list. So `#population` means "the number of people in the population list."
 
-**What is `#population`?** In Lua, `#` counts the number of items in a list. So `#population` means "the number of people in the population."
+**In plain English:**
+
+> "Count how many people there are and return that number."
 
 **Why do we need this?** The statistic shows us the total population count at each iteration. Since we're only aging people (not adding or removing anyone), the total should always be 10. This confirms our model is working correctly.
+
+---
+
+## Understanding the Configuration Structure
+
+Now let's put it all together. The configuration has three main sections:
+
+### 1. Simulation Section
+- Controls how the simulation runs
+- `iterations`: How many years
+- `population_file`: Where to read data from
+- `output_file`: Where to save results
+- `id_column`: Which column is the unique ID
+
+### 2. Models Section
+- Defines what happens each year
+- Each model has:
+  - `name`: What to call it
+  - `type`: What kind of model (`lua_model`)
+  - `priority`: When to run it (lower = earlier)
+  - `script`: The Lua code that does the work
+
+### 3. Statistics Section
+- Defines what to measure and report
+- Each statistic has:
+  - `name`: What to call it
+  - `description`: What it shows
+  - `script`: The Lua code that calculates it
+
+---
 
 ## What You've Accomplished
 
@@ -433,8 +631,11 @@ Congratulations! You've successfully:
 3. ✅ Run a Talos simulation
 4. ✅ Aged an entire population by 5 years
 5. ✅ Tracked population totals
+6. ✅ Understood how Lua connects to your CSV data
 
 You now know the basic workflow for using Talos.
+
+---
 
 ## Next Steps
 

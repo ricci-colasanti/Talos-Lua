@@ -1,7 +1,3 @@
-Here's the updated tutorial with that section removed:
-
----
-
 # Talos Tutorial 1: Building an Aging Model
 
 ## Overview
@@ -380,46 +376,47 @@ end
 
 ### Why Must the Function Be Called `transition`?
 
-You might wonder: **"Why does the function have to be called `transition`? Can I call it something else?"**
+**All model functions must be called `transition`.** This is a requirement of Talos.
 
-**The short answer:** Yes, it must be called `transition` (for models) or `statistic` (for statistics). Talos looks for these exact function names when running your scripts.
+**Why?**
 
-**How Talos Finds Your Function**
+When Talos runs your model, it needs to know which function to execute. Rather than guessing, Talos looks for a function with the exact name `transition`. This is similar to how:
 
-When Talos reads your YAML file and sees a model with `type: "lua_model"`, it:
+- A car needs a steering wheel (it knows exactly where to look)
+- A TV remote needs a power button (it knows exactly what to press)
+- A recipe needs ingredients (it knows exactly what to add)
 
-1. **Loads the Lua script** from the `script` field
-2. **Looks for a function called `transition`** in that script
-3. **Runs that function** every year
+By requiring a specific function name, Talos can reliably find and run your model every year.
 
-If Talos doesn't find a function called `transition`, it will throw an error:
+**The same applies to statistics:** All statistic functions must be called `statistic`.
+
+**What happens if you use a different name?**
+
+If you call your model function something else, Talos won't find it and will throw an error:
 
 ```
 ERROR: script must define a 'transition' function
 ```
 
-**Why This Design?**
+**Example:**
 
-This is a common pattern in embedded scripting languages. By requiring specific function names:
+```lua
+-- ❌ WRONG - Talos won't find this
+function my_model(population, params)
+  for _, person in ipairs(population) do
+    person.age = person.age + 1
+  end
+  return population
+end
 
-1. **Talos knows what to call**: It doesn't need to guess which function is the model
-2. **Your script is self-contained**: You can have helper functions with any names you want
-3. **The contract is clear**: You know exactly what Talos expects
-
-**What About Statistics?**
-
-Similarly, for statistics, Talos looks for a function called `statistic`:
-
-```yaml
-statistics:
-  - name: "population_total"
-    script: |
-      function statistic(population)
-        return { total = #population }
-      end
+-- ✅ CORRECT - Talos finds this
+function transition(population, params)
+  for _, person in ipairs(population) do
+    person.age = person.age + 1
+  end
+  return population
+end
 ```
-
-If you called it `my_statistic`, Talos wouldn't find it.
 
 **Summary:**
 

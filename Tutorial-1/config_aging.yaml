@@ -1,0 +1,35 @@
+# config_aging.yaml
+# A simple aging model configuration
+
+simulation:
+  iterations: 5                    # Run for 5 years
+  population_file: "Tutorial-1/population.csv" # Input population
+  output_file: "Tutorial-1/population_aged.csv" # Output after aging
+  random_seed: 42                   # For reproducibility
+  verbose: true                     # Show detailed output
+  id_column: "person_id"            # REQUIRED: Primary key column
+
+models:
+  - name: "age_increment"
+    type: "lua_model"
+    priority: 1
+    enabled: true
+    description: "Increment everyone's age by 1 year"
+    parameters:
+      script: |
+        function transition(population, params)
+          for _, person in ipairs(population) do
+            if person.alive == true then
+              person.age = person.age + 1
+            end
+          end
+          return population
+        end
+
+statistics:
+  - name: "population_total"
+    description: "Total population"
+    script: |
+      function statistic(population)
+        return { total = #population }
+      end

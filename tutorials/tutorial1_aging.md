@@ -1,3 +1,7 @@
+Here's the updated tutorial with that section removed:
+
+---
+
 # Talos Tutorial 1: Building an Aging Model
 
 ## Overview
@@ -374,9 +378,66 @@ end
 
 > "Go through everyone in the population. For each person who is alive, take their current age, add 1 to it, and save that new age back to the population."
 
+### Why Must the Function Be Called `transition`?
+
+You might wonder: **"Why does the function have to be called `transition`? Can I call it something else?"**
+
+**The short answer:** Yes, it must be called `transition` (for models) or `statistic` (for statistics). Talos looks for these exact function names when running your scripts.
+
+**How Talos Finds Your Function**
+
+When Talos reads your YAML file and sees a model with `type: "lua_model"`, it:
+
+1. **Loads the Lua script** from the `script` field
+2. **Looks for a function called `transition`** in that script
+3. **Runs that function** every year
+
+If Talos doesn't find a function called `transition`, it will throw an error:
+
+```
+ERROR: script must define a 'transition' function
+```
+
+**Why This Design?**
+
+This is a common pattern in embedded scripting languages. By requiring specific function names:
+
+1. **Talos knows what to call**: It doesn't need to guess which function is the model
+2. **Your script is self-contained**: You can have helper functions with any names you want
+3. **The contract is clear**: You know exactly what Talos expects
+
+**What About Statistics?**
+
+Similarly, for statistics, Talos looks for a function called `statistic`:
+
+```yaml
+statistics:
+  - name: "population_total"
+    script: |
+      function statistic(population)
+        return { total = #population }
+      end
+```
+
+If you called it `my_statistic`, Talos wouldn't find it.
+
+**Summary:**
+
+| Script Type | Required Function Name | What It Does |
+|-------------|------------------------|--------------|
+| Model | `transition(population, params)` | Runs each year, transforms the population |
+| Statistic | `statistic(population)` | Runs each year, returns a result table |
+
+**Remember:** The function name must be **exactly** `transition` or `statistic` - case-sensitive!
+
+| Correct | Incorrect |
+|---------|-----------|
+| `function transition(population, params)` | `function Transition(population, params)` |
+| `function statistic(population)` | `function my_statistic(population)` |
+
 ### Understanding `ipairs`
 
-You might wonder: **"What is `ipairs` and why do we use it?"**
+You might also wonder: **"What is `ipairs` and why do we use it?"**
 
 `ipairs` is a Lua function that helps us **loop through a list in order**. Think of it like this:
 
@@ -556,6 +617,8 @@ Population = {
 
 | Concept | Explanation |
 |---------|-------------|
+| `transition` | **Required name** for model functions |
+| `statistic` | **Required name** for statistic functions |
 | `ipairs` | Loops through a list in order |
 | `_` | Means "I don't need this value" |
 | `person` | The current person being processed |
@@ -565,7 +628,7 @@ Population = {
 
 ---
 
-## Understanding the Statistics Script (In Detail)
+## Understanding the Statistics Script
 
 Now let's look at our statistics script with this new understanding:
 
@@ -579,7 +642,7 @@ end
 
 | Line | Code | What it does |
 |------|------|--------------|
-| 1 | `function statistic(population)` | Defines the statistic function |
+| 1 | `function statistic(population)` | Defines the statistic function (MUST be called `statistic`) |
 | 2 | `  return { total = #population }` | Returns a result table with `total` = number of people |
 
 **What is `#population`?**
@@ -611,14 +674,14 @@ Now let's put it all together. The configuration has three main sections:
   - `name`: What to call it
   - `type`: What kind of model (`lua_model`)
   - `priority`: When to run it (lower = earlier)
-  - `script`: The Lua code that does the work
+  - `script`: The Lua code that does the work (MUST have a `transition` function)
 
 ### 3. Statistics Section
 - Defines what to measure and report
 - Each statistic has:
   - `name`: What to call it
   - `description`: What it shows
-  - `script`: The Lua code that calculates it
+  - `script`: The Lua code that calculates it (MUST have a `statistic` function)
 
 ---
 
@@ -632,6 +695,7 @@ Congratulations! You've successfully:
 4. ✅ Aged an entire population by 5 years
 5. ✅ Tracked population totals
 6. ✅ Understood how Lua connects to your CSV data
+7. ✅ Learned why function names must be `transition` and `statistic`
 
 You now know the basic workflow for using Talos.
 

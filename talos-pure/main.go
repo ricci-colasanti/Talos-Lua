@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 	"gopkg.in/yaml.v3"
 )
 
@@ -72,8 +72,25 @@ type LuaVM struct {
 }
 
 // NewLuaVM creates a new Lua VM with Talos-specific functions
-func NewLuaVM() *LuaVM {
+// The randomSeed parameter seeds Lua's random number generator for reproducibility
+func NewLuaVM(randomSeed int64) *LuaVM {
 	L := lua.NewState()
+
+	// Seed Lua's random number generator to match the YAML random_seed
+	// This ensures reproducible results across runs
+	if randomSeed > 0 {
+		// math.randomseed() expects an integer
+		err := L.DoString(fmt.Sprintf("math.randomseed(%d)", randomSeed))
+		if err != nil {
+			log.Printf("Warning: Failed to seed Lua random: %v", err)
+		}
+	} else {
+		// If no seed provided, use current time (results won't be reproducible)
+		err := L.DoString(fmt.Sprintf("math.randomseed(%d)", time.Now().UnixNano()))
+		if err != nil {
+			log.Printf("Warning: Failed to seed Lua random: %v", err)
+		}
+	}
 
 	// Register Talos-specific functions
 	L.SetGlobal("log", L.NewFunction(func(L *lua.LState) int {
@@ -368,6 +385,7 @@ func main() {
 	log.Printf("Iterations: %d", simConfig.Simulation.Iterations)
 	log.Printf("Population file: %s", simConfig.Simulation.PopulationFile)
 	log.Printf("ID column: %s", simConfig.Simulation.IDColumn)
+	log.Printf("Random seed: %d", simConfig.Simulation.RandomSeed)
 	log.Printf("Models loaded: %d", len(simConfig.Models))
 	log.Printf("Statistics defined: %d", len(simConfig.Statistics))
 
@@ -389,8 +407,8 @@ func main() {
 		log.Printf("  - %s (priority: %d)", model.Name, model.Priority)
 	}
 
-	// 4. Create Lua VM
-	luaVM := NewLuaVM()
+	// 4. Create Lua VM with seed for reproducibility
+	luaVM := NewLuaVM(simConfig.Simulation.RandomSeed)
 	defer luaVM.Close()
 
 	// 5. Run the simulation

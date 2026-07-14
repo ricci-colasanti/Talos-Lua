@@ -88,103 +88,6 @@ Talos is a single, self-contained executable that:
 
 ---
 
-## Get Help from AI with the LLM Prompt Template
-
-Writing Talos models is easy, but sometimes you need a little help getting started. We've created an **LLM Prompt Template** that you can copy and paste into any AI assistant (ChatGPT, Claude, etc.) to get help writing your models.
-
-### How It Works
-
-1. **Copy** the [LLM Prompt Template](LLM_PROMPT_TEMPLATE.md)
-2. **Paste** it into your preferred AI assistant
-3. **Describe** what you want to build
-4. **Get** working YAML and Lua code
-
-### What the Template Includes
-
-The template provides the AI with:
-- **Context**: What Talos is and how it works
-- **Examples**: Working models for aging, mortality, fertility, migration, education, and income
-- **Statistics**: Common statistics like age distribution, sex distribution, dependency ratio
-- **Templates**: Ready-to-use YAML configuration templates
-- **Structure**: The exact format needed for Talos models
-
-### Example Questions You Can Ask
-
-Once you've pasted the template into your AI assistant, you can ask:
-
-- "I want to add a model where people get married. Women marry at age 20-30, men at 22-35."
-- "I need a fertility model where fertility rates vary by age: 15-19: 2%, 20-24: 8%, 25-29: 10%, 30-34: 8%, 35-39: 4%, 40-44: 1%"
-- "How do I create a statistic that shows the median age of the population?"
-- "I want migration to depend on distance between areas."
-- "I need a household formation model where young adults leave their parents' household."
-
-### Example AI Response
-
-When you ask "I want a fertility model where fertility rates vary by age," the AI will generate something like:
-
-```lua
-function transition(population, params)
-  local newborns = {}
-  
-  local max_id = 0
-  for _, person in ipairs(population) do
-    if person.person_id ~= nil and person.person_id > max_id then
-      max_id = person.person_id
-    end
-  end
-  
-  for _, person in ipairs(population) do
-    if person.alive == true and person.sex == "F" then
-      local age = person.age
-      local rate = 0
-      
-      if age >= 15 and age < 20 then
-        rate = 0.02
-      elseif age >= 20 and age < 25 then
-        rate = 0.08
-      elseif age >= 25 and age < 30 then
-        rate = 0.10
-      elseif age >= 30 and age < 35 then
-        rate = 0.08
-      elseif age >= 35 and age < 40 then
-        rate = 0.04
-      elseif age >= 40 and age < 45 then
-        rate = 0.01
-      elseif age >= 45 and age < 50 then
-        rate = 0.001
-      end
-      
-      if math.random() < rate then
-        max_id = max_id + 1
-        local baby = {
-          person_id = max_id,
-          age = 0,
-          sex = math.random() < 0.5 and "F" or "M",
-          area = person.area,
-          alive = true,
-          mother_id = person.person_id
-        }
-        table.insert(newborns, baby)
-      end
-    end
-  end
-  
-  for _, baby in ipairs(newborns) do
-    table.insert(population, baby)
-  end
-  
-  return population
-end
-```
-
-Then the AI will show you exactly how to add it to your `config.yaml`.
-
-### Get the Template
-
-📄 **[Download the LLM Prompt Template](LLM_PROMPT_TEMPLATE.md)** - Copy and paste this into your AI assistant!
-
----
-
 ## Overview
 
 Talos is a **migration-focused microsimulation engine** that models population dynamics through individual-level simulation. Unlike traditional microsimulation systems that require code changes for each new model, Talos uses:
@@ -832,6 +735,105 @@ function transition(population, params)
   return population
 end
 ```
+
+---
+
+## Get Help from AI with the LLM Prompt Template
+
+Writing Talos models is easy, but sometimes you need a little help getting started. We've created an **LLM Prompt Template** that you can copy and paste into any AI assistant (ChatGPT, Claude, etc.) to get help writing your models.
+
+### How It Works
+
+1. **Copy** the [LLM Prompt Template](LLM_PROMPT_TEMPLATE.md)
+2. **Paste** it into your preferred AI assistant
+3. **Describe** what you want to build
+4. **Get** working YAML and Lua code
+
+### What the Template Includes
+
+The template provides the AI with:
+- **Context**: What Talos is and how it works
+- **Examples**: Working models for aging, mortality, fertility, migration, education, and income
+- **Statistics**: Common statistics like age distribution, sex distribution, dependency ratio
+- **Templates**: Ready-to-use YAML configuration templates
+- **Structure**: The exact format needed for Talos models
+
+### Example Questions You Can Ask
+
+Once you've pasted the template into your AI assistant, you can ask:
+
+- "I want to add a model where people get married. Women marry at age 20-30, men at 22-35."
+- "I need a fertility model where fertility rates vary by age: 15-19: 2%, 20-24: 8%, 25-29: 10%, 30-34: 8%, 35-39: 4%, 40-44: 1%"
+- "How do I create a statistic that shows the median age of the population?"
+- "I want migration to depend on distance between areas."
+- "I need a household formation model where young adults leave their parents' household."
+
+### Example AI Response
+
+When you ask "I want a fertility model where fertility rates vary by age," the AI will generate something like:
+
+```lua
+function transition(population, params)
+  local newborns = {}
+  
+  local max_id = 0
+  for _, person in ipairs(population) do
+    if person.person_id ~= nil and person.person_id > max_id then
+      max_id = person.person_id
+    end
+  end
+  
+  for _, person in ipairs(population) do
+    if person.alive == true and person.sex == "F" then
+      local age = person.age
+      local rate = 0
+      
+      if age >= 15 and age < 20 then
+        rate = 0.02
+      elseif age >= 20 and age < 25 then
+        rate = 0.08
+      elseif age >= 25 and age < 30 then
+        rate = 0.10
+      elseif age >= 30 and age < 35 then
+        rate = 0.08
+      elseif age >= 35 and age < 40 then
+        rate = 0.04
+      elseif age >= 40 and age < 45 then
+        rate = 0.01
+      elseif age >= 45 and age < 50 then
+        rate = 0.001
+      end
+      
+      if math.random() < rate then
+        max_id = max_id + 1
+        local baby = {
+          person_id = max_id,
+          age = 0,
+          sex = math.random() < 0.5 and "F" or "M",
+          area = person.area,
+          alive = true,
+          mother_id = person.person_id
+        }
+        table.insert(newborns, baby)
+      end
+    end
+  end
+  
+  for _, baby in ipairs(newborns) do
+    table.insert(population, baby)
+  end
+  
+  return population
+end
+```
+
+Then the AI will show you exactly how to add it to your `config.yaml`.
+
+### Get the Template
+
+📄 **[Download the LLM Prompt Template](LLM_PROMPT_TEMPLATE.md)** - Copy and paste this into your AI assistant!
+
+---
 
 ## License
 

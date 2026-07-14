@@ -176,7 +176,7 @@ simulation:
   output_file: "population_aged.csv" # Output after aging
   random_seed: 42                   # For reproducibility
   verbose: true                     # Show detailed output
-  id_column: "person_id"            # REQUIRED: Primary key column
+  id_column: "person_id"            # REQUIRED: Unique identifier column
 
 models:
   - name: "age_increment"
@@ -310,7 +310,7 @@ simulation:
   output_file: "population_aged.csv" # Output after aging
   random_seed: 42                   # For reproducibility
   verbose: true                     # Show detailed output
-  id_column: "person_id"            # REQUIRED: Primary key column
+  id_column: "person_id"            # REQUIRED: Unique identifier column
 ```
 
 This tells Talos:
@@ -321,7 +321,7 @@ This tells Talos:
 - **Whether to show detailed output** (`verbose: true`)
 - **Which column is the unique identifier** (`id_column: "person_id"`)
 
-**Why is `id_column` required?** Talos uses this column to order the output CSV consistently, making it easier to compare results across different runs.
+**Why is `id_column` required?** Every individual in your population needs a unique identifier. This is how Talos keeps track of each person throughout the simulation. When people age, die, or have children, Talos uses this ID to ensure it's updating the right person. Without a unique ID column, Talos wouldn't be able to distinguish between individuals or link family members together. The `id_column` tells Talos which column in your CSV contains these unique identifiers. Ordering the output by this column is a secondary benefit that makes it easier to compare results across different runs.
 
 ### 2. The Models Section
 
@@ -674,7 +674,7 @@ Now let's put it all together. The configuration has three main sections:
 - `iterations`: How many years
 - `population_file`: Where to read data from
 - `output_file`: Where to save results
-- `id_column`: Which column is the unique ID
+- `id_column`: Which column contains the unique ID (REQUIRED)
 
 ### 2. Models Section
 - Defines what happens each year
@@ -704,6 +704,7 @@ Congratulations! You've successfully:
 5. ✅ Tracked population totals
 6. ✅ Understood how Lua connects to your CSV data
 7. ✅ Learned that model functions must be called `transition` and statistic functions must be called `statistic`
+8. ✅ Understood why the `id_column` is required
 
 You now know the basic workflow for using Talos.
 

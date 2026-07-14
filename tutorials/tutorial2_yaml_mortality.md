@@ -185,49 +185,62 @@ Now let's add a mortality model to our simulation. This will make our model more
 
 **In plain English:** "Each year, check every person. If they are alive and under 30, there's a 0.1% chance they die. If they are alive and 30 or over, there's a 5% chance they die. If they die, mark them as dead."
 
-### The Mortality Lua Script
+### The Mortality Model in YAML with Lua
+
+Here's the mortality model as it appears in your `config.yaml`:
+
+```yaml
+# Model 2: Mortality (runs second)
+- name: "mortality"
+  type: "lua_model"
+  priority: 2
+  enabled: true
+  description: "Age-specific mortality: 0.1% for under 30, 5% for 30+"
+  parameters:
+    script: |
+      function transition(population, params)
+        for _, person in ipairs(population) do
+          if person.alive == true then
+            local age = person.age
+            local prob = 0
+            
+            if age < 30 then
+              prob = 0.001  -- 0.1% chance
+            else
+              prob = 0.05   -- 5% chance
+            end
+            
+            if math.random() < prob then
+              person.alive = false
+            end
+          end
+        end
+        return population
+      end
+```
 
 **First, in plain English:** "Go through everyone in the population. For each person who is alive, check their age. If they are under 30, flip a coin with a 0.1% chance of coming up heads. If heads, mark them as dead. If they are 30 or over, flip a coin with a 5% chance of coming up heads. If heads, mark them as dead."
-
-**The Lua:**
-
-```lua
-function transition(population, params)
-  for _, person in ipairs(population) do
-    if person.alive == true then
-      local age = person.age
-      local prob = 0
-      
-      if age < 30 then
-        prob = 0.001  -- 0.1% chance
-      else
-        prob = 0.05   -- 5% chance
-      end
-      
-      if math.random() < prob then
-        person.alive = false
-      end
-    end
-  end
-  return population
-end
-```
 
 **Let's break down what each part does:**
 
 | Part | What it does | In plain English |
 |------|--------------|------------------|
-| `function transition(population, params)` | Define the model | "This is the model that runs each year" |
-| `for _, person in ipairs(population) do` | Loop through people | "For each person in the population..." |
-| `if person.alive == true then` | Check if alive | "...if they are alive..." |
-| `local age = person.age` | Get their age | "...get their age..." |
-| `if age < 30 then` | Check age group | "...if they're under 30..." |
-| `prob = 0.001` | Set probability | "...they have a 0.1% chance of dying" |
+| `- name: "mortality"` | Names the model | "This model is called 'mortality'" |
+| `type: "lua_model"` | Tells Talos it's a Lua script | "This is a Lua model" |
+| `priority: 2` | Sets execution order | "Run this after priority 1 models" |
+| `enabled: true` | Activates the model | "This model is turned on" |
+| `script: |` | Starts the Lua code | "Here comes the Lua script..." |
+| `function transition(population, params)` | Defines the model | "This is the model that runs each year" |
+| `for _, person in ipairs(population) do` | Loops through people | "For each person in the population..." |
+| `if person.alive == true then` | Checks if alive | "...if they are alive..." |
+| `local age = person.age` | Gets their age | "...get their age..." |
+| `if age < 30 then` | Checks age group | "...if they're under 30..." |
+| `prob = 0.001` | Sets probability | "...they have a 0.1% chance of dying" |
 | `else` | Otherwise | "...otherwise (they're 30 or over)..." |
-| `prob = 0.05` | Set probability | "...they have a 5% chance of dying" |
-| `if math.random() < prob then` | Roll the dice | "...roll a random number..." |
-| `person.alive = false` | Mark as dead | "...if it's less than the probability, mark them as dead" |
-| `return population` | Return updated population | "Send back the updated population" |
+| `prob = 0.05` | Sets probability | "...they have a 5% chance of dying" |
+| `if math.random() < prob then` | Rolls the dice | "...roll a random number..." |
+| `person.alive = false` | Marks as dead | "...if it's less than the probability, mark them as dead" |
+| `return population` | Returns updated population | "Send back the updated population" |
 
 **What is `math.random()`?** In Lua, `math.random()` generates a random number between 0 and 1. So `math.random() < 0.001` means "there's a 0.1% chance this is true" (like flipping a weighted coin).
 
